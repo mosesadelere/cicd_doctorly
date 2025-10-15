@@ -1,0 +1,74 @@
+# GitLab CI/CD configuration for sample Node.js application
+
+# Define stages
+stages:
+  - build
+  - test
+
+# Use Docker-in-Docker executor for building Docker images
+variables:
+  DOCKER_DRIVER: overlay2
+  DOCKER_TLS_CERTDIR: "/certs"
+  IMAGE_NAME: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
+  CONTAINER_NAME: sample-app-container
+
+# Services required for Docker
+services:
+  - docker:dind
+
+# Build stage - creates Docker image artifact
+build:
+  stage: build
+  image: docker:20.10.16
+  before_script:
+    - echo "Starting build stage for commit $CI_COMMIT_SHA"
+    - docker info
+  script:
+    - echo "Building application Docker image"
+    - docker build -t $IMAGE_NAME .
+    - echo "Build completed successfully"
+    - docker images $IMAGE_NAME
+    # Save Docker image as artifact
+    - mkdir -p artifacts
+    - docker save $IMAGE_NAME -o artifacts/app-image.tar
+  artifacts:
+    paths:
+      - artifacts/
+    expire_in: 1 week
+  only:
+    - branches
+
+# Test stage - runs tests in containerized environment
+# This approach ensures tests run in the same environment as production
+containerized-test:
+  stage: test
+  image: docker:20.10.16
+  before_script:
+    - echo "Starting containerized test stage"
+    - docker info
+  script:
+    - echo "Loading Docker image from build stage"
+    - docker load -i artifacts/app-image.tar
+    - echo "Running tests in Docker container"
+    # Run tests in the same container that will be deployed
+    - docker run --rm $IMAGE_NAME npm test
+    - echo "Containerized tests completed successfully"
+  only:
+    - branches
+  dependencies:
+    - build
+
+# Alternative test stage - runs tests directly on runner
+# This is faster but may not match production environment exactly
+# direct-test:
+#   stage: test
+#   image: node:18
+#   before_script:
+#     - echo "Installing dependencies for testing"
+#     - npm ci
+#   script:
+#     - echo "Running tests"
+#     - npm test
+#     - echo "Tests completed successfully"
+#   only:
+#     - branches

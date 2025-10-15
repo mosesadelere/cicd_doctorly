@@ -1,0 +1,24 @@
+{
+  "name": "sample-cicd-app",
+  "version": "1.0.0",
+  "description": "A sample application for CI/CD pipeline demonstration",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "jest"
+  },
+  "keywords": [
+    "cicd",
+    "gitlab",
+    "docker"
+  ],
+  "author": "Cascade AI",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "jest": "^29.5.0",
+    "supertest": "^6.3.3"
+  }
+}

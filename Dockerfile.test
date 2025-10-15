@@ -1,0 +1,20 @@
+# Test Dockerfile for running tests in containerized environment
+FROM node:18
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install all dependencies (including dev dependencies)
+RUN npm ci
+
+# Copy application code
+COPY . .
+
+# Expose port
+EXPOSE 3000
+
+# Command to run tests
+CMD ["npm", "test"]
